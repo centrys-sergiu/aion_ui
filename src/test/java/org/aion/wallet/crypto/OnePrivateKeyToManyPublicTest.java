@@ -1,5 +1,6 @@
 package org.aion.wallet.crypto;
 
+import com.bushidowallet.core.bitcoin.bip32.Derivation;
 import com.bushidowallet.core.bitcoin.bip32.ExtendedKey;
 import org.aion.mcf.account.Keystore;
 import org.junit.Assert;
@@ -11,9 +12,10 @@ public class OnePrivateKeyToManyPublicTest {
         String address = Keystore.create("test");
         byte[] pubKey = Keystore.getKey(address, "test").getPubKey();
         ExtendedKey e = new ExtendedKey(pubKey);
+        Derivation derivation = new Derivation(e);
         ExtendedKey derive1 = null;
         try {
-            derive1 = e.derive(1);
+            derive1 = derivation.basic(1);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
