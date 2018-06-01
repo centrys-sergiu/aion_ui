@@ -5,11 +5,11 @@
 <?import java.net.URL?>
 <AnchorPane prefHeight="46.0" xmlns="http://javafx.com/javafx/8.0.121"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.aion.wallet.ui.components.partials.ConnectivityStatusController" fx:id="parent">
+            fx:controller="org.aion.wallet.ui.components.partials.ConnectivityStatusController" fx:id="parent"
+            AnchorPane.leftAnchor="10" AnchorPane.bottomAnchor="10">
     <stylesheets>
         <URL value="@../footer-pane.css" />
     </stylesheets>
-    <Label fx:id="connectivityLabel" styleClass="connected-label" text="Connection status..."
-           AnchorPane.bottomAnchor="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"/>
+    <Label fx:id="connectivityLabel" styleClass="connected-label" text="Connection status..."/>
 
 </AnchorPane>
