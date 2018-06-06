@@ -3,6 +3,7 @@ package org.aion.wallet.connector.api;
 import com.google.common.eventbus.Subscribe;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
+import org.aion.api.impl.internal.Message;
 import org.aion.api.log.LogEnum;
 import org.aion.api.type.*;
 import org.aion.base.type.Address;
@@ -13,6 +14,7 @@ import org.aion.wallet.connector.BlockchainConnector;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
 import org.aion.wallet.connector.dto.SyncInfoDTO;
 import org.aion.wallet.connector.dto.TransactionDTO;
+import org.aion.wallet.connector.dto.TransactionResponseDTO;
 import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.dto.LightAppSettings;
 import org.aion.wallet.events.AccountEvent;
@@ -20,16 +22,14 @@ import org.aion.wallet.events.EventBusFactory;
 import org.aion.wallet.events.EventPublisher;
 import org.aion.wallet.events.SettingsEvent;
 import org.aion.wallet.exception.NotFoundException;
+import org.aion.wallet.exception.ValidationException;
 import org.aion.wallet.log.WalletLoggerFactory;
 import org.aion.wallet.storage.ApiType;
 import org.aion.wallet.util.AionConstants;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -106,7 +106,7 @@ public class ApiBlockchainConnector extends BlockchainConnector {
     }
 
     @Override
-    protected String sendTransactionInternal(final SendTransactionDTO dto) {
+    protected TransactionResponseDTO sendTransactionInternal(final SendTransactionDTO dto) throws ValidationException {
         final BigInteger latestTransactionNonce = getLatestTransactionNonce(dto.getFrom());
         TxArgs txArgs = new TxArgs.TxArgsBuilder()
                 .from(new Address(TypeConverter.toJsonHex(dto.getFrom())))
@@ -129,7 +129,20 @@ public class ApiBlockchainConnector extends BlockchainConnector {
             unLock();
         }
 
-        return String.valueOf(response.getTxHash());
+        final TransactionResponseDTO transactionResponseDTO = mapTransactionResponse(response);
+        List acceptedTransactionResponseStatuses = Arrays.asList(Message.Retcode.r_tx_Init_VALUE, Message.Retcode.r_tx_Recved_VALUE, Message.Retcode.r_tx_NewPending_VALUE, Message.Retcode.r_tx_Pending_VALUE, Message.Retcode.r_tx_Included_VALUE);
+        if(!acceptedTransactionResponseStatuses.contains(transactionResponseDTO.getStatus())) {
+            throw new ValidationException("Transaction failed!");
+        }
+        return transactionResponseDTO;
+    }
+
+    private TransactionResponseDTO mapTransactionResponse(final MsgRsp response) {
+        TransactionResponseDTO transactionResponse = new TransactionResponseDTO();
+        transactionResponse.setStatus(response.getStatus());
+        transactionResponse.setTxHash(response.getTxHash());
+        transactionResponse.setError(response.getError());
+        return transactionResponse;
     }
 
     @Override
